@@ -31,18 +31,25 @@ Si `llm_provider` en `config.toml` no tiene clave, escribe tú el guion: frase g
 
 ## 4. Material de vídeo
 
-Para los clips de Pexels, prepara términos de búsqueda en inglés (3–6, separados por comas) con `--video-terms` y usa `--video-source pexels`. La clave puede llegar por dos vías:
-- **Secreto de red del entorno:** la inyecta el proxy. En ese caso pon en `config.toml` `pexels_api_keys = ["proxy-injected"]`.
-- **Clave real** dentro de `pexels_api_keys`.
+Primero comprueba si Pexels está disponible:
 
-Si Pexels responde 401/403 o no hay clave, usa fondos generados en local:
+```bash
+uv run python .claude/skills/generar-video/check_pexels.py
+```
+
+El script imprime `pexels` o `local`. Prueba tanto una clave real en `pexels_api_keys` como un «Network secret» del entorno para `api.pexels.com`, que inyecta el proxy. En este segundo caso escribe por su cuenta `pexels_api_keys = ["proxy-injected"]` en `config.toml`, así que no hay que tocar nada a mano.
+
+- **`pexels`:** prepara 3–6 términos de búsqueda **en inglés**, separados por comas, que describan imágenes concretas (p. ej. `coffee beans, barista pouring coffee, goats ethiopia`). Usa `--video-source pexels --video-terms "…"`.
+- **`local`:** usa fondos generados en local:
 
 ```bash
 CLIPS=$(.claude/skills/generar-video/make_clips.sh "$SCRATCH/clips")   # para 16:9 añade 1920x1080
 # luego: --video-source local --video-materials "$CLIPS" --video-concat-mode sequential --video-transition-mode fade-in --video-clip-duration 4
 ```
 
-`$SCRATCH` es el directorio scratchpad de la sesión. Avisa al usuario de que los fondos son provisionales y de cómo añadir la clave: ajustes del entorno, **Network secrets**, host `api.pexels.com`, cabecera `Authorization`, valor de la clave **sin** prefijo `Bearer`. Nunca le pidas que pegue claves en el chat.
+`$SCRATCH` es el directorio scratchpad de la sesión. Avisa al usuario de que los fondos son provisionales y de cómo añadir la clave: ajustes del entorno, **Network secrets**, host `api.pexels.com`, cabecera `Authorization`, valor de la clave **sin** prefijo `Bearer`. La clave se aplica en las sesiones nuevas. Nunca le pidas que pegue claves en el chat.
+
+Si la generación con Pexels falla a mitad, por ejemplo porque no encuentra clips para los términos, prueba con términos más generales y, si sigue fallando, pasa a `local`.
 
 ## 5. Generar
 
